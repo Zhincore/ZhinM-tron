@@ -1,0 +1,17 @@
+{
+  "name": "zhinm-tron",
+  "version": "1.0.0",
+  "author": "Zhincore",
+  "license": "GPL-3.0-or-later",
+  "private": true,
+  "scripts": {
+    "build": "node build.js --mode=production",
+    "watch": "node build.js"
+  },
+  "devDependencies": {
+    "@citizenfx/client": "^2.0.5897-1",
+    "@citizenfx/server": "^2.0.5897-1",
+    "@types/node": "^18.7.19",
+    "esbuild": "^0.14.10"
+  }
+}

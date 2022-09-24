@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "$root/*": ["./src/*"],
+      "$client/*": ["./src/client/*"]
+    },
+    "baseUrl": ".",
+    "noImplicitAny": true,
+    "module": "esnext",
+    "target": "ESNext",
+    "lib": ["es2021"],
+    "strict": true,
+    "alwaysStrict": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "noEmit": true
+  },
+  "include": ["./src"]
+}
