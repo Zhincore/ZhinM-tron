@@ -6,6 +6,7 @@ FiveM minigame that resembles the GTAO's Deadline gamemode.
 
 - [ ] Handle trail and collisions on the server
 - [ ] Routing bucket management
+- [ ] Bypass gamemode respawns
 - [ ] Better maps
 - [ ] Power-ups
 - [ ] Start/setup
