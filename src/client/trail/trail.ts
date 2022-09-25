@@ -2,12 +2,13 @@ import { IVector3, Vector3 } from "$root/Vector3";
 import colors from "./colorPresets";
 
 const trailLength = 256;
-const brighten = 2;
+const minLength = 16;
+const brighten = 1.5;
 const extendUp = 0.32;
 const extendDown = 0.3;
-const fadeOutOffset = 0.25;
+const fadeOutOffset = 0.1;
 const minDistace = 0.1;
-const ownTrailThreshold = 0.1; // Affects minimal speed
+const ownTrailThreshold = 0.05; // Affects minimal speed
 const segmentInterval = 1000 / 30;
 
 export function createTrailTick(vehicle: number) {
@@ -78,12 +79,16 @@ export function createTrailTick(vehicle: number) {
       const [top0, bottom0] = segments[i - 1].map((v) => v.toTuple());
       const [top1, bottom1] = segments[i].map((v) => v.toTuple());
 
-      if (i < _ownTrailThreshold) {
-        const offset = GetOffsetFromEntityGivenWorldCoords(vehicle, ...bottom1);
+      if (posHistory.length > minLength && i < _ownTrailThreshold) {
+        const offsets = [
+          GetOffsetFromEntityGivenWorldCoords(vehicle, ...bottom0),
+          GetOffsetFromEntityGivenWorldCoords(vehicle, ...top0),
+        ];
 
-        if (offset.every((o, i) => (o < 0 ? o > hitboxMin[i] : o < hitboxMax[i]))) {
+        if (offsets.some((offset) => offset.every((o, i) => (o < 0 ? o > hitboxMin[i] : o < hitboxMax[i])))) {
           SetEntityHealth(vehicle, -4000);
-          AddExplosion(vehPos[0], vehPos[1], vehPos[2], 10, 100, true, false, 1);
+          AddExplosion(vehPos[0], vehPos[1], vehPos[2], 36, 1, true, false, 1);
+          stop();
           break;
         }
       }
