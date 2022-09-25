@@ -6,17 +6,14 @@ const minLength = 0.05;
 /** Height of the trail above wheel center */
 const extendUp = 0.32;
 /** Height of the trail bellow the wheel center */
-const extendDown = 0.3;
+const extendDown = 0.28;
 /** Width of the trail */
 const trailWidth = 0.1;
 /** [0.0-1.0] Portion at the end of the trail that fades out */
 const fadeOutOffset = 0.1;
 /** Minimal moved distance before we start removing the trail */
 const minDistace = 0.1;
-/**
- * [0.0-1.0] Portion of the trail that doesn't collide with the bike.
- * The smaller the faster bike has go.
- */
+/** [0.0-1.0] Portion of the trail that doesn't collide with the bike. The smaller the faster bike has go. */
 const ownTrailThreshold = 0.1;
 /** How often record positions. */
 const segmentInterval = 1000 / 45;
@@ -146,10 +143,12 @@ export class TronTrail extends EventEmitter {
       const alpha = Math.floor((i / (this.posHistory.length * fadeOutOffset)) * 255);
 
       // FIXME: triangles are distinguishable from one of the sides when tiled towards that side
-      drawPoly(top0, bottom1, bottom0, options.color, alpha, 0);
-      drawPoly(bottom0, bottom1, top0, options.color, alpha, 1);
-      drawPoly(top0, top1, bottom1, options.color, alpha, 2);
-      drawPoly(top1, top0, bottom1, options.color, alpha, 3);
+
+      drawPoly(top0, top1, bottom1, options.color, alpha, [0, 0, 1], [1, 0, 1], [1, 1, 1]); // top left
+      drawPoly(top0, bottom1, bottom0, options.color, alpha, [0, 1, 0], [0, 0, 0], [1, 0, 1]); // bottom left
+
+      drawPoly(top1, top0, bottom1, options.color, alpha, [0, 0, 1], [1, 0, 1], [1, 1, 1]); // top right
+      drawPoly(bottom0, bottom1, top0, options.color, alpha, [0, 0, 1], [1, 0, 1], [1, 1, 1]); // bottom right
     }
   }
 }
@@ -164,8 +163,6 @@ export class TronTrail extends EventEmitter {
  * @see https://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms/18459#18459
  */
 function doesLineCollideWithBox(p: IVector3, dirInv: IVector3, length: number, bMin: IVector3, bMax: IVector3) {
-  // lb is the corner of AABB with minimal coordinates - left bottom, rt is maximal corner
-  // r.org is origin of ray
   const t1 = (bMin[0] - p[0]) * dirInv[0];
   const t2 = (bMax[0] - p[0]) * dirInv[0];
   const t3 = (bMin[1] - p[1]) * dirInv[1];
@@ -175,31 +172,30 @@ function doesLineCollideWithBox(p: IVector3, dirInv: IVector3, length: number, b
 
   const tmin = Math.max(Math.max(Math.min(t1, t2), Math.min(t3, t4)), Math.min(t5, t6));
   const tmax = Math.min(Math.min(Math.max(t1, t2), Math.max(t3, t4)), Math.max(t5, t6));
-  let t: number;
 
   // if tmax < 0, ray (line) is intersecting AABB, but the whole AABB is behind us
   if (tmax < 0) {
-    t = tmax;
     return false;
   }
 
   // if tmin > tmax, ray doesn't intersect AABB
   if (tmin > tmax) {
-    t = tmax;
     return false;
   }
 
-  t = tmin;
-  return t <= length;
+  return tmin <= length;
 }
 
-const DRAW_POLY_SIDES = [
-  [0, 1, 0, 0, 0, 0, 1, 0, 1],
-  [0, 0, 1, 1, 0, 1, 1, 1, 1],
-  [0, 0, 1, 1, 0, 1, 1, 1, 1],
-  [0, 0, 1, 1, 0, 1, 1, 1, 1],
-] as const;
-function drawPoly(pos0: IVector3, pos1: IVector3, pos2: IVector3, color: IVector3, alpha: number, side: number) {
+function drawPoly(
+  pos0: IVector3,
+  pos1: IVector3,
+  pos2: IVector3,
+  color: IVector3,
+  alpha: number,
+  uvw0: IVector3,
+  uvw1: IVector3,
+  uvw2: IVector3,
+) {
   DrawSpritePoly(
     ...pos0,
     ...pos1,
@@ -208,6 +204,8 @@ function drawPoly(pos0: IVector3, pos1: IVector3, pos2: IVector3, color: IVector
     alpha,
     "Deadline",
     "Deadline_Trail_01",
-    ...DRAW_POLY_SIDES[side as 0],
+    ...uvw0,
+    ...uvw1,
+    ...uvw2,
   );
 }
