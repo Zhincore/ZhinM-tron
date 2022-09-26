@@ -4,17 +4,20 @@ FiveM minigame that resembles the GTAO's Deadline gamemode.
 
 ## TODO
 
-- [ ] Handle trail and collisions on the server
-- [ ] Routing bucket management
-- [ ] Bypass gamemode respawns
-- [ ] Better maps
-- [ ] Power-ups
+- [x] Fully custom streamed maps
 - [ ] Start/setup
 - [ ] End/cleanup
-- [ ] ? Fully custom streamed maps
+- [ ] Smarter collision ignoring/min speed
+- [ ] Smarter position recording (moving slow = trail disappears slower too)
 - [ ] ? Weather/time control?
 - [ ] ? Disable vMenu?
 - [ ] ? Create a minigame framework?
+
+### Server
+
+- [ ] Handle trail and collisions on the server
+- [ ] Routing bucket management
+- [ ] Multiple concurrent games
 
 ### UI
 
@@ -27,20 +30,23 @@ FiveM minigame that resembles the GTAO's Deadline gamemode.
 
 - [x] Trail behind vehicle
 - [x] Collision detection between trail and vehicle
+- [ ] Power-ups
 - [ ] Team mechanics
+  - [ ] Point counting
 - [ ] Player spawning
   - [x] Drive forward on spawn
   - [ ] Grace period on spawn
 - [ ] Respawning
-- [ ] Point counting
+  - [ ] Bypass gamemode respawns
 - [ ] Off-map destruction
 
 ### Map manager
 
 - [x] Map loading
-- [ ] Spawns (= custom format?)
-- [ ] Texture variation (= custom format?)
-- [ ] ? Load .fxworld without compiling?
+- [ ] Custom format
+  - [ ] Converter from fxworld
+  - [ ] Spawns
+  - [ ] Texture variation
 
 ## Acknowledgement
 

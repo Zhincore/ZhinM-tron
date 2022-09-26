@@ -3,18 +3,16 @@ import { IVector3, Vector3 } from "$root/Vector3";
 
 /** [0.0-1.0 of trailLength] Minimal number of history records before tracking collisions */
 const minLength = 0.05;
+/** Move the start of the trail forward */
+const topOffsetY = 0.1;
 /** Height of the trail above wheel center */
-const extendUp = 0.32;
+const extendUp = 0.38;
 /** Height of the trail bellow the wheel center */
 const extendDown = 0.28;
-/** Width of the trail */
-const trailWidth = 0.1;
 /** [0.0-1.0] Portion at the end of the trail that fades out */
 const fadeOutOffset = 0.1;
-/** Minimal moved distance before we start removing the trail */
-const minDistace = 0.1;
-/** [0.0-1.0] Portion of the trail that doesn't collide with the bike. The smaller the faster bike has go. */
-const ownTrailThreshold = 0.1;
+/** How many segmens don't collide with the bike. The smaller the faster bike has go. */
+const ownTrailThreshold = 16; // 2 = min 30 km/h; 3 = min 15 km/h; 4 = min 10 km/h?
 /** How often record positions. */
 const segmentInterval = 1000 / 45;
 
@@ -69,11 +67,12 @@ export class TronTrail extends EventEmitter {
     }
 
     const pos = new Vector3(GetWorldPositionOfEntityBone(this.vehicle, this.boneI));
-    const [_fv, _rv, upVectorRaw, vehPos] = GetEntityMatrix(this.vehicle);
+    const [forwardVectorRaw, _rv, upVectorRaw, vehPos] = GetEntityMatrix(this.vehicle);
+    const forwardVector = new Vector3(forwardVectorRaw);
     const upVector = new Vector3(upVectorRaw);
 
+    const top = pos.add(forwardVector.mult(topOffsetY)).add(upVector.mult(extendUp));
     const bottom = pos.sub(upVector.mult(extendDown));
-    const top = pos.add(upVector.mult(extendUp));
     const newSegment: [Vector3, Vector3] = [top, bottom];
 
     const timestamp = GetGameTimer();
@@ -81,22 +80,15 @@ export class TronTrail extends EventEmitter {
       this.lastTimestamp = timestamp;
 
       this.posHistory.push(newSegment);
-
-      if (this.posHistory.length > 2) {
-        // Progresively remove segments while slow/stopped
-        const last = this.posHistory[this.posHistory.length - 2];
-        if (last[1].sub(bottom).getLength() < minDistace) this.posHistory.shift();
-      }
     }
 
     // No rendering needed yet
     if (this.posHistory.length < 2) return;
 
     // Process
-    const _ownTrailThreshold = this.posHistory.length * (1 - ownTrailThreshold);
-    const segments = [...this.posHistory, newSegment];
-
     let lastPoints: [Vector3, Vector3] | undefined = undefined;
+
+    const segments = [...this.posHistory, newSegment]; // This makes the loop actually render the new segment, why is this needed?
     for (let i = this.posHistory.length; i > 0; i--) {
       if (this.posHistory.length - i > options.trailLength) {
         this.posHistory.shift();
@@ -106,7 +98,7 @@ export class TronTrail extends EventEmitter {
       const [top0, bottom0] = segments[i - 1];
       const [top1, bottom1] = segments[i];
 
-      if (this.posHistory.length > minLength * options.trailLength && i < _ownTrailThreshold) {
+      if (i < this.posHistory.length - ownTrailThreshold) {
         if (!lastPoints) {
           lastPoints = [
             GetOffsetFromEntityGivenWorldCoords(this.vehicle, ...bottom0.asTuple()),
@@ -142,13 +134,12 @@ export class TronTrail extends EventEmitter {
 
       const alpha = Math.floor((i / (this.posHistory.length * fadeOutOffset)) * 255);
 
-      // FIXME: triangles are distinguishable from one of the sides when tiled towards that side
+      // FIXME: triangles on left are visible from an angle
+      drawPoly(top0, top1, bottom1, options.color, alpha, [0, 0, 1], [1, 0, 1], [1, 1, 1]); // left top
+      drawPoly(top0, bottom1, bottom0, options.color, alpha, [0, 1, 1], [0, 0, 1], [1, 0, 1]); // left bottom
 
-      drawPoly(top0, top1, bottom1, options.color, alpha, [0, 0, 1], [1, 0, 1], [1, 1, 1]); // top left
-      drawPoly(top0, bottom1, bottom0, options.color, alpha, [0, 1, 0], [0, 0, 0], [1, 0, 1]); // bottom left
-
-      drawPoly(top1, top0, bottom1, options.color, alpha, [0, 0, 1], [1, 0, 1], [1, 1, 1]); // top right
-      drawPoly(bottom0, bottom1, top0, options.color, alpha, [0, 0, 1], [1, 0, 1], [1, 1, 1]); // bottom right
+      drawPoly(top1, top0, bottom1, options.color, alpha, [0, 0, 1], [1, 0, 1], [1, 1, 1]); // right top
+      drawPoly(bottom0, bottom1, top0, options.color, alpha, [0, 0, 1], [1, 0, 1], [1, 1, 1]); // right bottom
     }
   }
 }
